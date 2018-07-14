@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE FlexibleContexts   #-}
@@ -8,6 +9,7 @@
 module Main where
 
 import           Control.Lens                     (Lens', lens, (%%~), (^.))
+import           Control.Monad
 import           Control.Monad.Haskey
 import           Control.Monad.IO.Class           (liftIO)
 import           Control.Monad.Reader
@@ -127,18 +129,24 @@ deleteTree2 file =
 
 app :: [ByteString] -> App ()
 app files = do
-  liftIO $ putStrLn "insert file name to tree1"
-  mapM_ insertTree1 files
-  liftIO $ putStrLn "finish insert file name to tree1"
-  mainLoop
+  let !n = length files
+  liftIO $ putStrLn $ "insert file name to tree1 (" ++ show n ++ " files)"
+  forM_ (zip files [1..]) $ \(f, i) -> do
+    when (i `mod` 100 == 0) $
+        liftIO $ putStrLn $ "inserted file " ++ show i ++ "/" ++ show n
+    insertTree1 f
 
-mainLoop :: App ()
-mainLoop = do
+  liftIO $ putStrLn "finish insert file name to tree1"
+  mainLoop 0
+
+mainLoop :: Int -> App ()
+mainLoop !i = do
   files <- transactReadOnly $ queryTree1 (foldrTree (foldFunc 100) [])
   liftIO $ putStrLn $ "mainLoop: process file name: " <> show (length files)
   mapM_ processOne files
+  liftIO $ putStrLn $ "Processed " ++ show i ++ " files"
   if null files then pure ()
-                else mainLoop
+                else mainLoop (i+length files)
   where foldFunc :: Int -> ByteString -> [ByteString] -> [ByteString]
         foldFunc n bs xs | length xs > n = xs
                          | otherwise = bs : xs

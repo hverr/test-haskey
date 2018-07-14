@@ -66,9 +66,7 @@ extra-package-dbs: []
 # Allow a newer minor version of GHC than the snapshot specifies
 # compiler-check: newer-minor
 
-system-ghc: true
-
-package-indices:
-  - name: USTC
-    download-prefix: https://mirrors.ustc.edu.cn/hackage/package/
-    http: https://mirrors.ustc.edu.cn/hackage/01-index.tar.gz
+#package-indices:
+#  - name: USTC
+#    download-prefix: https://mirrors.ustc.edu.cn/hackage/package/
+#    http: https://mirrors.ustc.edu.cn/hackage/01-index.tar.gz
